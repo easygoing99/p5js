@@ -1,0 +1,265 @@
+/* p5.js 과제 네 가지 - 메인 페이지 스타일 */
+
+/* 캔버스 크기: 각 작품의 createCanvas(가로, 세로) 값과 동일하게 설정 */
+/* 작품마다 크기가 다르면 파일 맨 아래 작품별 설정 사용 */
+:root {
+  --cw: 600;        /* 캔버스 가로 */
+  --ch: 400;        /* 캔버스 세로 */
+  --stage: 320;     /* 액자 표시 크기(px) */
+
+  --paper:   #ece4d6;   /* 배경 */
+  --mat:     #f7f2e9;   /* 액자 매트 */
+  --ink:     #211c17;   /* 글자 */
+  --ink-soft:#6f655a;   /* 흐린 글자 */
+  --accent:  #b1492b;   /* 강조색 */
+  --line:    #cbbfa9;   /* 테두리선 */
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(120% 90% at 50% -10%, #f3ecdf 0%, var(--paper) 55%, #e3d9c6 100%);
+  color: var(--ink);
+  font-family: "Fraunces", Georgia, serif;
+  padding: clamp(28px, 6vw, 72px) 20px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+/* 배경 질감 */
+.grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* 소개 */
+.intro {
+  text-align: center;
+  max-width: 640px;
+  margin-bottom: clamp(28px, 5vw, 52px);
+  animation: rise 0.9s cubic-bezier(.2,.7,.2,1) both;
+}
+
+.kicker {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 18px;
+}
+
+.title {
+  font-weight: 350;
+  font-size: clamp(2.4rem, 8vw, 4.6rem);
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+}
+.title em {
+  font-style: italic;
+  font-weight: 400;
+}
+
+.subtitle {
+  margin-top: 20px;
+  font-size: clamp(0.95rem, 2.4vw, 1.08rem);
+  font-style: italic;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+
+/* 열 라벨 */
+.col-labels {
+  width: 100%;
+  max-width: 760px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(20px, 4vw, 44px);
+  margin-bottom: 14px;
+  animation: rise 0.9s 0.1s cubic-bezier(.2,.7,.2,1) both;
+}
+.col-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+/* 2x2 그리드 */
+#gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(20px, 4vw, 44px);
+  width: 100%;
+  max-width: 760px;
+}
+
+.piece {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: rise 0.8s cubic-bezier(.2,.7,.2,1) both;
+  animation-delay: calc(0.18s + var(--i) * 0.12s);
+}
+
+/* 액자 */
+.stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--mat);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow:
+    0 1px 0 #fff inset,
+    0 10px 22px -14px rgba(40,30,20,0.5),
+    0 2px 6px -3px rgba(40,30,20,0.25);
+  transition: transform .45s cubic-bezier(.2,.7,.2,1),
+              box-shadow .45s cubic-bezier(.2,.7,.2,1);
+}
+
+/* 작품(iframe): 캔버스 크기로 표시 후 액자에 맞게 축소 */
+.stage iframe {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--cw) * 1px);
+  height: calc(var(--ch) * 1px);
+  border: none;
+  transform-origin: center center;
+  transform: translate(-50%, -50%)
+             scale(calc(var(--stage) / max(var(--cw), var(--ch))));
+  pointer-events: none;
+}
+
+.piece:hover .stage {
+  transform: translateY(-6px);
+  box-shadow:
+    0 1px 0 #fff inset,
+    0 26px 40px -20px rgba(40,30,20,0.55),
+    0 6px 14px -6px rgba(40,30,20,0.3);
+}
+
+/* 상호작용 작품: 클릭 후 키/마우스 입력 */
+.piece--interactive .stage { cursor: pointer; }
+.piece--interactive .stage iframe { pointer-events: auto; }
+
+/* 조작 안내 배지 */
+.hint {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 2;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(33, 28, 23, 0.72);
+  color: #f7f2e9;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* 명패 */
+.placard {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.placard .no {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-soft);
+}
+.placard .name {
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+.placard .tag {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  margin-top: 2px;
+}
+.tag--still {
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+}
+.tag--move {
+  color: #fff;
+  background: var(--accent);
+}
+
+/* 조작 키 안내 */
+.controls {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.66rem;
+  color: var(--ink-soft);
+}
+.controls kbd {
+  font-family: inherit;
+  font-size: 0.62rem;
+  line-height: 1;
+  padding: 3px 6px;
+  background: var(--mat);
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  color: var(--ink);
+}
+
+/* 푸터 */
+.foot {
+  margin-top: clamp(36px, 6vw, 60px);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  animation: rise 0.9s 0.7s cubic-bezier(.2,.7,.2,1) both;
+}
+
+/* 등장 애니메이션 */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; }
+}
+
+/* 모바일: 1열 */
+@media (max-width: 560px) {
+  #gallery { grid-template-columns: 1fr; max-width: 360px; }
+  .col-labels { display: none; }
+}
